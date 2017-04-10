@@ -26,7 +26,7 @@ Arduino Uno (плюс ещё один, если будет использова�
  
 * Вывод сигнала 
 
- 1 шт Female MIDI jack (5-pin DIN)
+ 1 шт Female MIDI jack (5-pin DIN, другие названия СШ-5, СГ-5, DIN 41524, «5-pin DIN 180°», DIN-5/180°.)
 
  2 шт 220 ohm resistors
 
@@ -44,3 +44,11 @@ Arduino Uno (плюс ещё один, если будет использова�
 ## Среда разработки:
  Arduino IDE 
 
+## Datasheets
+
+HC-06
+https://www.olimex.com/Products/Components/RF/BLUETOOTH-SERIAL-HC-06/resources/hc06.pdf
+
+## Библиотеки
+SoftwareSerial
+https://www.arduino.cc/en/Reference/softwareSerial
