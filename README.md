@@ -44,6 +44,19 @@ Arduino Uno (плюс ещё один, если будет использова�
 ## Среда разработки:
  Arduino IDE 
 
+
+## Схема
+
+![alt tag](https://github.com/fatkullin/arduino/blob/master/midi-blue%20main%20scheme1.png)
+
+![alt tag](https://github.com/fatkullin/arduino/blob/master/midi-blue%20main%20scheme2.png)
+
+##Breadbboard
+
+![alt tag](https://github.com/fatkullin/arduino/blob/master/midi-blue%20main%20scheme1.png)
+
+![alt tag](https://github.com/fatkullin/arduino/blob/master/midi-blue%20main%20scheme2.png)
+
 ## Datasheets
 
 HC-06
