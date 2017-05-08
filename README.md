@@ -51,11 +51,11 @@ Arduino Uno (плюс ещё один, если будет использова�
 
 ![alt tag](https://github.com/fatkullin/arduino/blob/master/midi-blue%20main%20scheme2.png)
 
-##Breadbboard
+## Breadbboard
 
-![alt tag](https://github.com/fatkullin/arduino/blob/master/midi-blue%20main%20scheme1.png)
+![alt tag](https://github.com/fatkullin/arduino/blob/master/midi-blue%20main%20bb1.png)
 
-![alt tag](https://github.com/fatkullin/arduino/blob/master/midi-blue%20main%20scheme2.png)
+![alt tag](https://github.com/fatkullin/arduino/blob/master/midi-blue%20main%20bb2.png)
 
 ## Datasheets
 
