@@ -73,28 +73,118 @@ public:
   }
 };
 
+class MidiPort
+{
+public:
+	enum Channel : uint8_t
+	{
+		Channel1, Channel2, Channel3, Channel4, Channel5, Channel6, Channel7, Channel8,
+		Channel9, Channel10, Channel11, Channel12, Channel13, Channel14, Channel15, Channel16,
+		ChannelDefault
+	};
 
-MidiOutSerial mySerial;
+	enum Note : uint8_t
+	{
+		C0, Cs0, D0, Ds0, E0, F0, Fs0, G0, Gs0, A0, As0, H0,
+	};
+
+	enum Control : uint8_t
+	{
+		BankSelect,
+		ModulationWheel,
+		BreathContoller,
+		Undefined,
+		FootController,
+		PortamentoTime,
+		DataEntryMSB,
+		MainVolume,
+		Balance,
+		Pan
+	};
+public:
+	explicit MidiPort(Channel channel = Channel10)
+		: m_initialized(false)
+		, m_defaultChannel(channel)
+	{
+	}
+
+	// should be called in initialize section
+	bool Initialize(uint8_t txPin)
+	{
+		if (txPin >= 8 && txPin <= 13)
+		{
+			m_serial.Initialize(txPin);
+			m_initialized = true;
+		}
+		return m_initialized;
+	}
+
+	// input velocity range 0 .. 127
+	void NoteOn(Note note, uint8_t velocity, Channel channel = ChannelDefault)
+	{
+		if (!m_initialized)
+			return;
+		if (channel == ChannelDefault)
+			channel = m_defaultChannel;
+		if (velocity > 127)
+			velocity = 127;
+		m_serial.write(0x90 + channel);
+		m_serial.write(note);
+		m_serial.write(velocity);
+	}
+
+	void NoteOff(Note note, Channel channel = ChannelDefault)
+	{
+		if (!m_initialized)
+			return;
+		if (channel == ChannelDefault)
+			channel = m_defaultChannel;
+		m_serial.write(0x80 + channel);
+		m_serial.write(note);
+		m_serial.write(0);
+
+	}
+
+	void AllNotesOff(Channel channel = ChannelDefault)
+	{
+		if (!m_initialized)
+			return;
+		if (channel == ChannelDefault)
+			channel = m_defaultChannel;
+		
+		m_serial.write(0xB0 + channel);
+		m_serial.write(123);
+		m_serial.write(0);
+	}
+
+	// input value range 0 .. 127
+	void ControlChange(Control control, uint8_t value, Channel channel = ChannelDefault)
+	{
+		if (!m_initialized)
+			return;
+		if (channel == ChannelDefault)
+			channel = m_defaultChannel;
+
+		if (value > 127)
+			value = 127;
+
+		m_serial.write(0xB0 + channel);
+		m_serial.write(control);
+		m_serial.write(value);
+	}
+
+	bool m_initialized;
+	MidiOutSerial m_serial;
+	Channel m_defaultChannel;
+};
+
+MidiPort g_midiPort;
 
 void setup() {
-  mySerial.Initialize(txPin);
 
-  pinMode(button1Pin, INPUT);
-}
+	g_midiPort.Initialize(txPin);
 
-//  plays a MIDI note.  Doesn't check to see that
-//  cmd is greater than 127, or that data values are  less than 127:
-void noteOn(int pitch, int velocity) {
-  mySerial.write(0x90);
-  mySerial.write(pitch);
-  mySerial.write(velocity);
-}
-
-void controlChange(int value)
-{
-  mySerial.write(0xB0); // MIDI control change; 
-  mySerial.write(1); // MIDI controller #1  (modulation wheel)
-  mySerial.write(value); // MIDI controller 
+	pinMode(button1Pin, INPUT);
 }
 
 volatile int button1State = 0;
@@ -104,28 +194,28 @@ volatile unsigned long button1DebounceTime = 0;
 const unsigned long DebounceTime = 100; //ms
 
 void loop() {
-  unsigned long currentTime = millis();
+	unsigned long currentTime = millis();
 
-  int currentState = digitalRead(button1Pin);
-  if (currentState != button1State)  //&& currentTime > button1DebounceTime
-  {
-    button1DebounceTime = currentTime + DebounceTime;
-    button1State = currentState;
-    if (button1State == 0)
-      noteOn(0x1E, 0x00);
-    else
-      noteOn(0x1E, 0x45);
-  }
+	int currentState = digitalRead(button1Pin);
+	if (currentState != button1State)  //&& currentTime > button1DebounceTime
+	{
+		button1DebounceTime = currentTime + DebounceTime;
+		button1State = currentState;
+		if (button1State == 1)
+			g_midiPort.NoteOn(MidiPort::A0, 60);
+		else
+			g_midiPort.NoteOff(MidiPort::A0);
+	}
 
-  currentState = analogRead(analog1Pin);
+	currentState = analogRead(analog1Pin);
 
-  if (abs(currentState - slider1State) > 8)
-  {
-    slider1State = currentState;
-    controlChange(slider1State / 8);
-  }
+	if (abs(currentState - slider1State) > 8)
+	{
+		slider1State = currentState;
+		g_midiPort.ControlChange(MidiPort::ModulationWheel, slider1State / 8);
+	}
 
-  delay(10);
+	delay(10);
 }
 
 
