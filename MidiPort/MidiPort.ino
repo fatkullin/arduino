@@ -1,9 +1,12 @@
 const byte txPin = 10;
 
 const byte button1Pin = 2;
+const byte button2Pin = 3;
+const byte button3Pin = 4;
 
 const byte analog1Pin = 0;
-
+const byte analog2Pin = 1;
+const byte analog3Pin = 2;
 
 // this class works only with PORTB output (pins 8-12)
 // and only atmega 16MHz controllers
@@ -85,7 +88,7 @@ public:
 
 	enum Note : uint8_t
 	{
-		C0, Cs0, D0, Ds0, E0, F0, Fs0, G0, Gs0, A0, As0, H0,
+		C0 = 12, Cs0, D0, Ds0, E0, F0, Fs0, G0, Gs0, A0, As0, H0,
 	};
 
 	enum Control : uint8_t
@@ -185,37 +188,80 @@ void setup() {
 	g_midiPort.Initialize(txPin);
 
 	pinMode(button1Pin, INPUT);
+	pinMode(button2Pin, INPUT);
+	pinMode(button3Pin, INPUT);
 }
 
 volatile int button1State = 0;
-volatile int slider1State = 0;
-volatile unsigned long button1DebounceTime = 0;
+volatile int button2State = 0;
+volatile int button3State = 0;
 
-const unsigned long DebounceTime = 100; //ms
+volatile unsigned long button1DebounceTime = 0;
+volatile unsigned long button2DebounceTime = 0;
+volatile unsigned long button3DebounceTime = 0;
+
+volatile int slider1State = 0;
+volatile int slider2State = 0;
+volatile int slider3State = 0;
+
+
+bool isDebounced(unsigned long currentTime, unsigned long debounceTime)
+{
+	const unsigned long DebounceTime = 100; //ms
+	return currentTime > debounceTime + DebounceTime
+		|| currentTime < debounceTime - DebounceTime;
+}
+
+const MidiPort::Note button1Note = MidiPort::A0;
+const MidiPort::Note button2Note = MidiPort::C0;
+const MidiPort::Note button3Note = MidiPort::G0;
+
+const MidiPort::Control slider1Control = MidiPort::ModulationWheel;
+const MidiPort::Control slider2Control = MidiPort::Balance;
+const MidiPort::Control slider3Control = MidiPort::MainVolume;
+
+void HandleButton(int currentState, unsigned long currentTime, unsigned long volatile* debounceTime, int volatile* buttonState, MidiPort::Note note)
+{
+	if (currentState != *buttonState && isDebounced(currentTime, *debounceTime))
+	{
+		*debounceTime = currentTime;
+		*buttonState = currentState;
+		if (*buttonState == 1)
+			g_midiPort.NoteOn(note, 60);
+		else
+			g_midiPort.NoteOff(note);
+	}
+}
+
+void HandleSlider(int currentState, int volatile* sliderState, MidiPort::Control control)
+{
+	if (abs(currentState - *sliderState) > 8)
+	{
+		*sliderState = currentState;
+		g_midiPort.ControlChange(control, currentState / 8);
+	}
+}
 
 void loop() {
 	unsigned long currentTime = millis();
+	int button1CurrentState = digitalRead(button1Pin);
+	int button2CurrentState = digitalRead(button2Pin);
+	int button3CurrentState = digitalRead(button3Pin);
 
-	int currentState = digitalRead(button1Pin);
-	if (currentState != button1State)  //&& currentTime > button1DebounceTime
-	{
-		button1DebounceTime = currentTime + DebounceTime;
-		button1State = currentState;
-		if (button1State == 1)
-			g_midiPort.NoteOn(MidiPort::A0, 60);
-		else
-			g_midiPort.NoteOff(MidiPort::A0);
-	}
+	int slider1CurrentState = analogRead(analog1Pin);
+	int slider2CurrentState = analogRead(analog2Pin);
+	int slider3CurrentState = analogRead(analog3Pin);
 
-	currentState = analogRead(analog1Pin);
+	HandleButton(button1CurrentState, currentTime, &button1DebounceTime, &button1State, button1Note);
+	HandleButton(button2CurrentState, currentTime, &button2DebounceTime, &button2State, button2Note);
+	HandleButton(button3CurrentState, currentTime, &button3DebounceTime, &button3State, button3Note);
 
-	if (abs(currentState - slider1State) > 8)
-	{
-		slider1State = currentState;
-		g_midiPort.ControlChange(MidiPort::ModulationWheel, slider1State / 8);
-	}
+	HandleSlider(slider1CurrentState, &slider1State, slider1Control);
+	HandleSlider(slider2CurrentState, &slider2State, slider2Control);
+	HandleSlider(slider3CurrentState, &slider3State, slider3Control);
 
-	delay(10);
+	delay((10));
+
 }
 
 
