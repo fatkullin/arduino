@@ -111,7 +111,7 @@ public:
 	{
 	}
 
-	// should be called in initialize section
+	// should be called in setup() section
 	bool Initialize(uint8_t txPin)
 	{
 		if (txPin >= 8 && txPin <= 13)
@@ -260,7 +260,6 @@ void loop() {
 	HandleSlider(slider2CurrentState, &slider2State, slider2Control);
 	HandleSlider(slider3CurrentState, &slider3State, slider3Control);
 
-	delay((10));
 
 }
 
